@@ -1,0 +1,15 @@
+.well, .well ul {
+  overflow: auto;
+  margin-bottom: 20pt;
+}
+
+.well ul li {
+  list-style-type: none;
+  margin-right: 10pt;
+  float: left;
+}
+
+.hit_button, .stay_button {
+  float: left;
+  margin-right: 10pt;
+}

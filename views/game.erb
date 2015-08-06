@@ -1,0 +1,53 @@
+<h1>Blackjack!</h1>
+
+<div class="well">
+  <h4>Dealer's cards</h4>
+  <ul>
+    <% session[:dealer_cards].each_with_index do |card, i| %>
+      <% if !@dealer_show_first_card && i == 0 %>
+        <li><img src = '/images/cards/cover.jpg'></li>
+      <% else %>
+        <li><%= card_image(card) %></li>
+      <% end %>
+
+    <% end %>
+  </ul>
+  <% if @dealer_turn %>
+    <p>
+      Dealer has <%= total(session[:dealer_cards]) %>  points and will hit.
+
+      <form action = "/game/dealer/hit" method = "post">
+        <input type = "submit" value = "Click to see Dealer's next card ->" class = "btn btn-primary" />
+      </form>
+    </p>
+  <% end %>
+</div>
+
+<div class="well">
+  <h4><%= session[:player_name] %>'s cards</h4>
+  <ul>
+    <% session[:player_cards].each do |card| %>
+      <li><%= card_image(card) %></li>
+    <% end %>
+  </ul>
+
+  <p>
+    <%= session[:player_name] %> has <%= total(session[:player_cards]) %> points. 
+  </p>
+
+  <% if @hit_or_stay_buttons %>
+
+    <p>
+      What would <%= session[:player_name] %> like to do?
+    </p>
+
+    <form action = "/game/player/hit" method = "post" class = "hit_button">
+      <input type = "submit" value = "Hit" class = "btn btn-success btn-large" /> 
+    </form>
+
+    <form action = "/game/player/stay" method = "post" class = "stay_button">
+      <input type = "submit" value = "Stay" class = "btn btn-warning btn-large" />
+    </form>
+  <% end %>
+
+</div>
