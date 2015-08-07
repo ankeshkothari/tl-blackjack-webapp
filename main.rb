@@ -37,6 +37,37 @@ helpers do
 
     "<img src= '/images/cards/#{card[0]}_#{card[1]}.jpg' />"
   end
+
+  def win!(msg)
+    @success = msg
+    @hit_or_stay_buttons = false
+    @play_again = true
+
+    session[:total_amount] += session[:bet_amount]
+  end
+
+  def lose!(msg)
+    @error = msg
+    @hit_or_stay_buttons = false
+    @play_again = true
+
+    session[:total_amount] -= session[:bet_amount]
+  end
+
+  def tie!(msg)
+    @success = msg
+    @hit_or_stay_buttons = false
+    @play_again = true
+  end
+
+  def blackjack_win(msg)
+    @success = msg
+    @hit_or_stay_buttons = false
+    @play_again = true
+
+    session[:total_amount] += session[:bet_amount]*1.5
+  end
+
 end
 
 before do
@@ -67,7 +98,7 @@ post '/player_name_amount_form' do
   end
 
   session[:player_name] = params[:player_name]
-  session[:total_amount] = params[:total_amount]
+  session[:total_amount] = params[:total_amount].to_f
   redirect '/bet_amount'
 end
 
@@ -81,12 +112,12 @@ post '/bet_amount' do
   if params[:bet_amount].empty? || params[:bet_amount].to_f == 0.0
     @error = "You need to enter a number for bet amount"
     halt erb :bet_amount
-  elsif params[:bet_amount] > session[:total_amount]
+  elsif params[:bet_amount].to_f > session[:total_amount].to_f
     @error = "You can't bet more than what you have" 
     halt erb :bet_amount
   end
 
-  session[:bet_amount] = params[:bet_amount]
+  session[:bet_amount] = params[:bet_amount].to_f
 
   redirect '/game'
 end
@@ -105,22 +136,24 @@ get '/game' do
   session[:player_cards] << session[:cards].pop
   session[:dealer_cards] << session[:cards].pop
 
+  if total(session[:player_cards]) == BLACKJACK_NUMBER
+    blackjack_amount = session[:bet_amount]*1.5
+    blackjack_win!("#{session[:player_name]} got a blackjack! #{session[:player_name]} wins $#{blackjack_amount}.")
+  end
+
   erb :game
 end
 
 post '/game/player/hit' do
   session[:player_cards] << session[:cards].pop
   if total(session[:player_cards]) > BLACKJACK_NUMBER
-    @error = "Sorry, #{session[:player_name]} has busted!"
-    @hit_or_stay_buttons = false
+    lose!("Sorry, #{session[:player_name]} has busted! #{session[:player_name]} loses $#{session[:bet_amount]}")
   end
   erb :game
 end
 
 post '/game/player/stay' do
   @success = "#{session[:player_name]} has chosen to stay!"
-  @hit_or_stay_buttons = false
-  @dealer_turn = true
   redirect '/game/dealer'
 end
 
@@ -129,16 +162,16 @@ get '/game/dealer' do
   @hit_or_stay_buttons = false
   @dealer_show_first_card = true
 
-  if total(session[:dealer_cards]) <= DEALER_MINIMUM
-    @dealer_turn = true
-  elsif total(session[:dealer_cards]) > BLACKJACK_NUMBER
-    @success = "Dealer has busted! #{session[:player_name]} wins!"
-  elsif total(session[:dealer_cards]) == total(session[:player_cards])
-    @success = "Both #{session[:player_name]} and Dealer have #{total(session[:player_cards])} points. Its a tie."
+  if total(session[:dealer_cards]) > BLACKJACK_NUMBER
+    win!("Dealer has busted! #{session[:player_name]} wins $#{session[:bet_amount]}.")
   elsif total(session[:dealer_cards]) > total(session[:player_cards])
-    @error = "#{session[:player_name]} has #{total(session[:player_cards])} points and Dealer has #{total(session[:dealer_cards])} points. #{session[:player_name]} loses."  
+    lose!("#{session[:player_name]} has #{total(session[:player_cards])} points and Dealer has #{total(session[:dealer_cards])} points. #{session[:player_name]} loses $#{session[:bet_amount]}.")
+  elsif total(session[:dealer_cards]) < DEALER_MINIMUM
+    @dealer_turn = true 
+  elsif total(session[:dealer_cards]) == total(session[:player_cards])
+    tie!("Both #{session[:player_name]} and Dealer have #{total(session[:player_cards])} points. Its a tie.")
   elsif total(session[:dealer_cards]) < total(session[:player_cards])
-    @success = "#{session[:player_name]} has #{total(session[:player_cards])} points and Dealer has #{total(session[:dealer_cards])} points. #{session[:player_name]} wins."  
+    win!("#{session[:player_name]} has #{total(session[:player_cards])} points and Dealer has #{total(session[:dealer_cards])} points. #{session[:player_name]} wins $#{session[:bet_amount]}.")
   end
 
   erb :game
@@ -148,4 +181,8 @@ post '/game/dealer/hit' do
   session[:dealer_cards] << session[:cards].pop
 
   redirect '/game/dealer'
+end
+
+get '/exit_game' do
+  erb :exit_game
 end

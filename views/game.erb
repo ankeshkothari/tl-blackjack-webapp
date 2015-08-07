@@ -1,4 +1,14 @@
-<h1>Blackjack!</h1>
+
+
+<% if @play_again %>
+  <div>
+    <p>
+      Do you want to play again? 
+      <a href = "/bet_amount" class = "btn btn-primary">Yes</a>
+      <a href = "/exit_game" class = "btn">No</a>
+    </p>
+  </div>
+<% end %>
 
 <div class="well">
   <h4>Dealer's cards</h4>
@@ -32,7 +42,7 @@
   </ul>
 
   <p>
-    <%= session[:player_name] %> has <%= total(session[:player_cards]) %> points. 
+    <%= session[:player_name] %> has <%= total(session[:player_cards]) %> points. Total bet is $<%= session[:bet_amount] %>.
   </p>
 
   <% if @hit_or_stay_buttons %>
