@@ -7,10 +7,11 @@ use Rack::Session::Cookie, :key => 'rack.session',
 
 BLACKJACK_NUMBER = 21
 DEALER_MINIMUM = 17
+SUIT = ["spades", "hearts", "clubs", "diamonds"]
+CARD_VALUES = ["2", "3", "4", "5", "6", "7", "8", "9", "10", "jack", "queen", "king", "ace"]
 
 helpers do
-  def total(player_or_dealer_cards)
-    cards = player_or_dealer_cards
+  def total(cards)
     total = 0
 
     cards.each do |card|
@@ -39,7 +40,7 @@ helpers do
   end
 
   def win!(msg)
-    @success = msg
+    @winner = msg
     @hit_or_stay_buttons = false
     @play_again = true
 
@@ -47,7 +48,7 @@ helpers do
   end
 
   def lose!(msg)
-    @error = msg
+    @loser = msg
     @hit_or_stay_buttons = false
     @play_again = true
 
@@ -55,13 +56,13 @@ helpers do
   end
 
   def tie!(msg)
-    @success = msg
+    @winner = msg
     @hit_or_stay_buttons = false
     @play_again = true
   end
 
   def blackjack_win(msg)
-    @success = msg
+    @winner = msg
     @hit_or_stay_buttons = false
     @play_again = true
 
@@ -103,6 +104,11 @@ post '/player_name_amount_form' do
 end
 
 get '/bet_amount' do
+  session[:bet_amount] = nil
+
+  if session[:total_amount].to_f <= 0
+    redirect '/exit_game'
+  end
 
   erb :bet_amount
 end
@@ -123,18 +129,16 @@ post '/bet_amount' do
 end
 
 get '/game' do
-  suit = ["spades", "hearts", "clubs", "diamonds"]
-  card_values = ["2", "3", "4", "5", "6", "7", "8", "9", "10", "jack", "queen", "king", "ace"]
-  deck = suit.product(card_values)
+  deck = SUIT.product(CARD_VALUES)
   session[:cards] = deck.shuffle!
 
   session[:dealer_cards] = []
   session[:player_cards] = []
 
-  session[:player_cards] << session[:cards].pop
-  session[:dealer_cards] << session[:cards].pop
-  session[:player_cards] << session[:cards].pop
-  session[:dealer_cards] << session[:cards].pop
+  2.times do
+    session[:player_cards] << session[:cards].pop
+    session[:dealer_cards] << session[:cards].pop
+  end
 
   if total(session[:player_cards]) == BLACKJACK_NUMBER
     blackjack_amount = session[:bet_amount]*1.5
@@ -149,12 +153,14 @@ post '/game/player/hit' do
   if total(session[:player_cards]) > BLACKJACK_NUMBER
     lose!("Sorry, #{session[:player_name]} has busted! #{session[:player_name]} loses $#{session[:bet_amount]}")
   end
-  erb :game
+  erb :game, layout: false
 end
 
 post '/game/player/stay' do
   @success = "#{session[:player_name]} has chosen to stay!"
   redirect '/game/dealer'
+
+  erb :game
 end
 
 get '/game/dealer' do
@@ -174,7 +180,7 @@ get '/game/dealer' do
     win!("#{session[:player_name]} has #{total(session[:player_cards])} points and Dealer has #{total(session[:dealer_cards])} points. #{session[:player_name]} wins $#{session[:bet_amount]}.")
   end
 
-  erb :game
+  erb :game, layout: false
 end
 
 post '/game/dealer/hit' do
