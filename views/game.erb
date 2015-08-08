@@ -33,13 +33,16 @@
       <% end %>
     </ul>
     <% if @dealer_turn %>
-      <p>
-        Dealer has <%= total(session[:dealer_cards]) %>  points and will hit.
+      <div id = "dealer_turn">
+        <p>
+          Dealer has <%= total(session[:dealer_cards]) %>  points and will hit.
 
-        <form action = "/game/dealer/hit" method = "post">
-          <input type = "submit" value = "Click to see Dealer's next card ->" class = "btn btn-primary" id = "dealer_btn" />
-        </form>
-      </p>
+          <form action = "/game/dealer/hit" method = "post">
+            <input type = "submit" value = "Click to see Dealer's next card ->" class = "btn btn-primary" id = "dealer_btn" />
+          </form>
+
+        </p>
+      </div>
     <% end %>
   </div>
 

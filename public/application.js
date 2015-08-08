@@ -2,6 +2,7 @@ $(document).ready(function(){
   player_hits();
   player_stays();
   dealer_hits();
+  auto_click();
 });
 
 function player_hits(){

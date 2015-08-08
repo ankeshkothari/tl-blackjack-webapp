@@ -35,7 +35,6 @@ helpers do
   end
 
   def card_image(card)
-
     "<img src= '/images/cards/#{card[0]}_#{card[1]}.jpg' />"
   end
 
@@ -114,8 +113,7 @@ get '/bet_amount' do
 end
 
 post '/bet_amount' do
-
-  if params[:bet_amount].empty? || params[:bet_amount].to_f == 0.0
+  if params[:bet_amount].empty? || params[:bet_amount].to_f <= 0.0
     @error = "You need to enter a number for bet amount"
     halt erb :bet_amount
   elsif params[:bet_amount].to_f > session[:total_amount].to_f
@@ -164,7 +162,6 @@ post '/game/player/stay' do
 end
 
 get '/game/dealer' do
-
   @hit_or_stay_buttons = false
   @dealer_show_first_card = true
 
